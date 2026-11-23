@@ -53,11 +53,16 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
 #timerFill{height:100%;width:100%;background:#ffd75e;transition:width .2s linear}
 @media(max-width:360px){.shop-grid{grid-template-columns:repeat(2,1fr)}}
 
-/* الصفحة الرئيسية */
+/* الصفحة الرئيسية: كل الأزرار ظاهرة */
 #home.screen.active{
- height:100svh;min-height:100svh;overflow:hidden;
- display:flex;flex-direction:column;justify-content:center;
- padding:5px 12px;gap:0
+ height:100svh;
+ min-height:100svh;
+ overflow:hidden;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ padding:5px 12px;
+ gap:0
 }
 #home .logo{font-size:clamp(35px,10vw,44px);margin:0}
 #home .sub{margin:0 0 5px}
@@ -70,27 +75,37 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
 #home .menu{gap:7px;padding:9px}
 #home .menu button{min-height:49px;padding:8px 5px;font-size:14px}
 
-/* شاشة اللعب */
+/* شاشة اللعب: المتاهة والتحكم على نفس الشاشة */
 #gameScreen.screen.active{
- height:100svh;min-height:100svh;overflow:hidden;
- padding:5px 5px 7px;display:flex;flex-direction:column;
+ height:100svh;
+ min-height:100svh;
+ overflow:hidden;
+ padding:5px 5px 7px;
+ display:flex;
+ flex-direction:column;
  justify-content:flex-start
 }
 #gameScreen h3{margin:5px 0;font-size:17px}
 #gameScreen .game-info{margin:5px 0;font-size:12px}
 #gameScreen #mazeCanvas{
- width:min(96vw,56svh,560px);max-height:56svh;flex:0 1 auto
+ width:min(96vw,56svh,560px);
+ max-height:56svh;
+ flex:0 1 auto
 }
 #gameScreen .message{min-height:18px;font-size:12px}
 #gameScreen .controls{width:174px;margin:5px auto;gap:5px}
 #gameScreen .controls button{padding:9px 0;font-size:20px}
 #gameScreen .note{margin-top:3px;font-size:10px}
+
 @media(max-height:700px){
  #home .panel{margin:4px 0;padding:8px 10px}
  #home .menu{gap:5px;padding:7px}
  #home .menu button{min-height:43px}
  #home .stats{margin-top:6px}
- #gameScreen #mazeCanvas{width:min(94vw,49svh,520px);max-height:49svh}
+ #gameScreen #mazeCanvas{
+  width:min(94vw,49svh,520px);
+  max-height:49svh
+ }
  #gameScreen .controls{margin:3px auto}
 }
 </style>
@@ -120,14 +135,7 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
   <button onclick="openShop('maps')">🗺 متجر الخرائط</button>
   <button onclick="startRush()">⚡ طور جمع العملات</button>
   <button onclick="showScreen('profile')">ملف اللاعب</button>
-  <button onclick="startDaily()">تحدي اليوم</button>
-  <button onclick="showAchievements()">الإنجازات</button>
  </div>
-</section>
-
-<section id="achievementsScreen" class="screen">
- <div class="topbar"><button onclick="showScreen('home')">← الرئيسية</button><b>الإنجازات</b></div>
- <div class="panel"><div class="section">إنجازاتك</div><div id="achievementList"></div></div>
 </section>
 
 <section id="profile" class="screen">
@@ -176,10 +184,6 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
  </div>
  <canvas id="mazeCanvas" width="440" height="440"></canvas>
  <div id="message" class="message"></div>
- <div style="display:flex;justify-content:center;gap:8px;margin:2px auto">
-  <button onclick="useReveal()" style="padding:7px 12px;font-size:12px">كشف الطريق</button>
-  <button onclick="useDash()" style="padding:7px 12px;font-size:12px">اندفاع</button>
- </div>
  <div class="controls">
   <span class="empty"></span><button data-x="0" data-y="-1">▲</button><span class="empty"></span>
   <button data-x="-1" data-y="0">◀</button><button data-x="0" data-y="1">▼</button><button data-x="1" data-y="0">▶</button>
@@ -255,7 +259,6 @@ data.claimed=data.claimed||[];
 let level=1,mode="normal",maze=[],player={x:1,y:1},key={x:3,y:3},door={x:5,y:5},goal={x:19,y:19};
 let hasKey=false,won=false,coinsOnMap=[],timeLeft=60,timerId=null;
 let held=null,holdTimer=null,activeKey=null,keyTimer=null,swipe=null;
-let chests=[],portals=[],hazard=null,revealUntil=0,dailyMode=false,levelStartedAt=0;
 
 function save(){try{localStorage.setItem("orbixSave",JSON.stringify(data))}catch(e){}}
 function showScreen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")updateHome()}
@@ -341,7 +344,6 @@ function findPath(){
 }
 function prepareGame(){
  player={x:1,y:1};hasKey=false;won=false;coinsOnMap=[];
- chests=[];portals=[];hazard=null;revealUntil=0;dailyMode=false;
  document.getElementById("keyStatus").textContent="المفتاح: لم تحصل عليه";
  document.getElementById("gameCoins").textContent=data.coins;
 }
@@ -351,7 +353,6 @@ function loadLevel(l){
  let path=findPath(),ki=Math.max(3,Math.floor(path.length*.3)),di=Math.min(path.length-2,Math.max(ki+2,Math.floor(path.length*.68)));
  key={x:path[ki][0],y:path[ki][1]};door={x:path[di][0],y:path[di][1]};goal={x:19,y:19};
  prepareGame();
- setupExtras(level);levelStartedAt=Date.now();
  document.getElementById("gameTitle").textContent="المرحلة "+level;
  document.getElementById("timerBox").style.display="none";
  document.getElementById("restartBtn").style.display="";
@@ -452,12 +453,6 @@ function draw(){
  }else{
   coinsOnMap.forEach(c=>{ctx.fillStyle="#ffd75e";ctx.beginPath();ctx.arc(c.x*CELL+CELL/2,c.y*CELL+CELL/2,5,0,7);ctx.fill();ctx.strokeStyle="#fff0a5";ctx.stroke()});
  }
- if(mode==="normal"){
-  chests.forEach(c=>{if(!c.open){ctx.fillStyle="#c98236";ctx.fillRect(c.x*CELL+3,c.y*CELL+4,CELL-6,CELL-7);ctx.fillStyle="#ffe09a";ctx.fillRect(c.x*CELL+3,c.y*CELL+8,CELL-6,3)}});
-  portals.forEach((p,i)=>{ctx.strokeStyle=i===0?"#54eaff":"#d78cff";ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x*CELL+CELL/2,p.y*CELL+CELL/2,6,0,Math.PI*2);ctx.stroke()});
-  if(hazard){ctx.fillStyle="#ff687e";ctx.beginPath();ctx.arc(hazard.x*CELL+CELL/2,hazard.y*CELL+CELL/2,6,0,Math.PI*2);ctx.fill()}
-  if(Date.now()<revealUntil){ctx.strokeStyle="#fff1a6";ctx.lineWidth=2;let route=findPath();ctx.beginPath();route.forEach((v,i)=>{let x=v[0]*CELL+CELL/2,y=v[1]*CELL+CELL/2;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke()}
- }
  let cx=player.x*CELL+CELL/2,cy=player.y*CELL+CELL/2;
  ctx.shadowColor=s.color;ctx.shadowBlur=17;
  if(["cyan","red","green","yellow","purple","orange","black","white"].includes(s.id)){
@@ -499,71 +494,6 @@ canvas.addEventListener("pointermove",e=>{
 });
 function endSwipe(){swipe=null}
 canvas.addEventListener("pointerup",endSwipe);canvas.addEventListener("pointercancel",endSwipe);
-
-/* إضافات ORBIX */
-function setupExtras(l){
- const path=findPath(),mid=path.slice(5,Math.max(6,path.length-5));
- const pick=(n,used=[])=>{let a=mid.filter(p=>!used.some(q=>q[0]===p[0]&&q[1]===p[1]));return a.length?a[(l*11+n*7)%a.length]:path[Math.floor(path.length/2)]};
- if(l%2===0){let p=pick(1);chests=[{x:p[0],y:p[1],open:false}]}
- if(l%3===0){let a=pick(2),b=pick(4,[a]);portals=[{x:a[0],y:a[1]},{x:b[0],y:b[1]}]}
- if(l%2===1&&l>1){let p=pick(5);hazard={x:p[0],y:p[1]}}
-}
-function useReveal(){
- if(mode!=="normal"||won)return;
- revealUntil=Date.now()+5000;document.getElementById("message").textContent="تم كشف الطريق لمدة 5 ثوانٍ";draw();
- setTimeout(()=>{if(Date.now()>=revealUntil&&document.getElementById("gameScreen").classList.contains("active"))draw()},5100);
-}
-function useDash(){
- if(mode!=="normal"||won)return;
- let route=findPath(),i=route.findIndex(p=>p[0]===player.x&&p[1]===player.y);
- if(i>=0&&i<route.length-1){let p=route[i+1];move(p[0]-player.x,p[1]-player.y)}
-}
-function dailyKey(){return "orbixDaily_"+new Date().toISOString().slice(0,10)}
-function startDaily(){
- stopGame();mode="normal";level=1;maze=generateMaze(Number(new Date().toISOString().slice(0,10).replaceAll("-",""))+77123);
- prepareGame();dailyMode=true;
- let p=findPath();key={x:p[Math.floor(p.length*.28)][0],y:p[Math.floor(p.length*.28)][1]};
- door={x:p[Math.floor(p.length*.7)][0],y:p[Math.floor(p.length*.7)][1]};goal={x:19,y:19};
- setupExtras(2);levelStartedAt=Date.now();
- document.getElementById("gameTitle").textContent="تحدي اليوم";
- document.getElementById("timerBox").style.display="none";document.getElementById("restartBtn").style.display="";
- document.getElementById("message").textContent=localStorage.getItem(dailyKey())==="done"?"لعبت تحدي اليوم؛ المكافأة لا تتكرر.":"أنهِ التحدي لتحصل على 25 عملة";
- applyTheme();showScreen("gameScreen");draw();
-}
-function finishDaily(){
- if(won)return;won=true;stopGame();
- let claimed=localStorage.getItem(dailyKey())==="done";
- if(!claimed){data.coins+=25;localStorage.setItem(dailyKey(),"done");save()}
- document.getElementById("winTitle").textContent="أنهيت تحدي اليوم!";
- document.getElementById("winText").textContent="أكملت التحدي اليومي بنجاح.";
- document.getElementById("rewardText").textContent=claimed?"المكافأة مأخوذة مسبقاً":"25 عملة";
- document.getElementById("nextButton").style.display="none";showScreen("winScreen");
-}
-function showAchievements(){
- const items=[["البداية","أكمل أول مرحلة",data.completed>=1],["مستكشف","أكمل 5 مراحل",data.completed>=5],["متقدم","أكمل 10 مراحل",data.completed>=10],["خبير المتاهات","أكمل 25 مرحلة",data.completed>=25],["أسطورة ORBIX","أكمل كل المراحل",data.completed>=50],["جامع العملات","اجمع 100 عملة",data.coins>=100],["مقتني","امتلك 5 كرات",data.ownedBalls.length>=5]];
- let el=document.getElementById("achievementList");el.innerHTML="";
- items.forEach(a=>{let p=document.createElement("p");p.style.cssText="padding:10px;border-bottom:1px solid #382653;color:"+(a[2]?"#55e8c3":"#a395b6");p.textContent=(a[2]?"✓ ":"🔒 ")+a[0]+" — "+a[1];el.appendChild(p)});
- showScreen("achievementsScreen");
-}
-const oldMove=move;
-move=function(dx,dy){
- if(dailyMode&&mode==="normal"&&hasKey&&player.x+dx===goal.x&&player.y+dy===goal.y){finishDaily();return true}
- let ok=oldMove(dx,dy);
- if(!ok||won||mode!=="normal")return ok;
- let chest=chests.find(c=>!c.open&&c.x===player.x&&c.y===player.y);
- if(chest){chest.open=true;data.coins+=15;save();document.getElementById("message").textContent="صندوق كنز! +15 عملة";document.getElementById("gameCoins").textContent=data.coins;document.getElementById("coinsHome").textContent=data.coins}
- if(portals.length===2){let i=portals.findIndex(p=>p.x===player.x&&p.y===player.y);if(i!==-1){let p=portals[1-i];player={x:p.x,y:p.y};document.getElementById("message").textContent="انتقلت عبر البوابة!"}}
- 
- draw();return true;
-};
-const oldFinish=finishLevel;
-finishLevel=function(){
- if(dailyMode){finishDaily();return}
- let elapsed=(Date.now()-levelStartedAt)/1000;oldFinish();
- let rating=elapsed<45?"ممتاز":elapsed<90?"جيد جداً":elapsed<150?"جيد":"تم الاجتياز";
- document.getElementById("winText").textContent+=" — تقييم الوقت: "+rating+" ("+Math.floor(elapsed)+" ثانية)";
-};
-
 updateHome();applyTheme();
 </script>
 </body>
