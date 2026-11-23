@@ -553,8 +553,7 @@ move=function(dx,dy){
  let chest=chests.find(c=>!c.open&&c.x===player.x&&c.y===player.y);
  if(chest){chest.open=true;data.coins+=15;save();document.getElementById("message").textContent="صندوق كنز! +15 عملة";document.getElementById("gameCoins").textContent=data.coins;document.getElementById("coinsHome").textContent=data.coins}
  if(portals.length===2){let i=portals.findIndex(p=>p.x===player.x&&p.y===player.y);if(i!==-1){let p=portals[1-i];player={x:p.x,y:p.y};document.getElementById("message").textContent="انتقلت عبر البوابة!"}}
- if(hazard&&player.x===hazard.x&&player.y===hazard.y){player={x:1,y:1};document.getElementById("message").textContent="العائق أعادك إلى البداية."}
- if(hazard){let route=findPath(),i=route.findIndex(p=>p[0]===hazard.x&&p[1]===hazard.y),p=route[(Math.max(0,i)+3)%route.length];hazard={x:p[0],y:p[1]}}
+ 
  draw();return true;
 };
 const oldFinish=finishLevel;
