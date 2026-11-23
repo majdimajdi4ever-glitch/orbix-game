@@ -1,1 +1,530 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090817">
+<title>ORBIX | Maze Adventure</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ min-height:100vh;
+ background:radial-gradient(circle at top,#211747,#090817 65%);
+ color:white;
+ font-family:Arial,sans-serif;
+ text-align:center;
+ padding:20px 12px;
+}
+header{margin-bottom:18px}
+.logo{
+ font-size:42px;
+ font-weight:900;
+ letter-spacing:5px;
+ color:#65f5ff;
+ text-shadow:0 0 18px #00d9ff;
+}
+.subtitle{
+ color:#aaa4c7;
+ letter-spacing:4px;
+ font-size:12px;
+ margin-top:5px;
+}
+.stats{
+ display:flex;
+ justify-content:center;
+ gap:10px;
+ flex-wrap:wrap;
+ margin:18px auto;
+}
+.stat{
+ background:#17142c;
+ border:1px solid #39315e;
+ border-radius:12px;
+ padding:10px 17px;
+ min-width:95px;
+}
+.stat small{display:block;color:#aaa;font-size:11px}
+.stat strong{display:block;color:#66efff;font-size:19px;margin-top:5px}
+.game-box{
+ max-width:480px;
+ margin:auto;
+ padding:12px;
+ background:#15122a;
+ border:1px solid #38315c;
+ border-radius:20px;
+ box-shadow:0 0 35px #0008;
+}
+canvas{
+ display:block;
+ width:100%;
+ max-width:440px;
+ margin:auto;
+ border-radius:12px;
+ background:#0b0a19;
+ touch-action:none;
+}
+.message{
+ color:#bcb7d8;
+ min-height:22px;
+ margin:12px 0 5px;
+ font-size:13px;
+}
+.controls{
+ display:grid;
+ grid-template-columns:repeat(3,65px);
+ grid-template-rows:repeat(2,55px);
+ gap:8px;
+ justify-content:center;
+ margin:18px auto 8px;
+ direction:ltr;
+}
+.ctrl{
+ border:1px solid #45406e;
+ background:#24203e;
+ color:#70f4ff;
+ border-radius:13px;
+ font-size:25px;
+ font-weight:bold;
+ cursor:pointer;
+ touch-action:manipulation;
+}
+.ctrl:active{
+ background:#087f99;
+ transform:scale(.94);
+}
+.up{grid-column:2;grid-row:1}
+.left{grid-column:1;grid-row:2}
+.down{grid-column:2;grid-row:2}
+.right{grid-column:3;grid-row:2}
+.actions{
+ display:flex;
+ justify-content:center;
+ gap:10px;
+ flex-wrap:wrap;
+ margin-top:15px;
+}
+.action{
+ border:0;
+ border-radius:10px;
+ padding:11px 18px;
+ background:#5141a0;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+.action.secondary{background:#25213e;border:1px solid #49416f}
+.hint{
+ color:#77718f;
+ font-size:12px;
+ margin-top:15px;
+ line-height:1.8;
+}
+.overlay{
+ position:fixed;
+ inset:0;
+ background:#070613dd;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+ z-index:5;
+}
+.modal{
+ width:100%;
+ max-width:330px;
+ background:#19152e;
+ border:1px solid #5b4e9c;
+ border-radius:20px;
+ padding:28px 18px;
+ box-shadow:0 0 40px #30207888;
+}
+.modal h2{color:#68f2ff}
+.modal p{color:#c1bdd3;line-height:1.7}
+@media(max-width:400px){
+ .logo{font-size:35px}
+ .game-box{padding:8px}
+ .stat{min-width:85px;padding:9px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">ORBIX</div>
+ <div class="subtitle">MAZE ADVENTURE</div>
+</header>
+
+<div class="stats">
+ <div class="stat">
+  <small>LEVEL</small>
+  <strong id="level">1</strong>
+ </div>
+ <div class="stat">
+  <small>STARS</small>
+  <strong id="stars">0</strong>
+ </div>
+ <div class="stat">
+  <small>BEST LEVEL</small>
+  <strong id="best">1</strong>
+ </div>
+</div>
+
+<div class="game-box">
+ <canvas id="game" width="440" height="440"></canvas>
+ <div class="message" id="message">اجمع المفتاح وافتح الطريق إلى البوابة</div>
+
+ <div class="controls">
+  <button class="ctrl up" data-x="0" data-y="-1">▲</button>
+  <button class="ctrl left" data-x="-1" data-y="0">◀</button>
+  <button class="ctrl down" data-x="0" data-y="1">▼</button>
+  <button class="ctrl right" data-x="1" data-y="0">▶</button>
+ </div>
+
+ <div class="actions">
+  <button class="action" id="restart">إعادة المرحلة</button>
+  <button class="action secondary" id="next">المرحلة التالية</button>
+ </div>
+</div>
+
+<div class="hint">
+ استخدم الأسهم أو أزرار التحكم أو اسحب إصبعك على المتاهة.<br>
+ اجمع المفتاح، تجاوز العقبات، ووصل إلى البوابة.
+</div>
+
+<div class="overlay" id="overlay">
+ <div class="modal">
+  <h2 id="winTitle">LEVEL COMPLETED!</h2>
+  <p id="winText">لقد أنهيت المرحلة بنجاح.</p>
+  <button class="action" id="continue">تابع اللعب</button>
+ </div>
+</div>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const SIZE=40;
+const N=11;
+const TOTAL=15;
+
+let maze=[];
+let player={x:1,y:1};
+let key=null;
+let door=null;
+let goal={x:19,y:19};
+let collected=false;
+let won=false;
+let level=1;
+let stars=0;
+let best=Number(localStorage.getItem("orbixBest")||1);
+let touchStart=null;
+let lastMove=0;
+
+document.getElementById("best").textContent=best;
+document.getElementById("stars").textContent=stars;
+
+function shuffle(arr){
+ for(let i=arr.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+ }
+ return arr;
+}
+
+function generateMaze(){
+ const size=N*2+1;
+ maze=Array.from({length:size},()=>Array(size).fill(1));
+
+ function carve(x,y){
+  maze[y][x]=0;
+  let dirs=shuffle([[0,-1],[0,1],[-1,0],[1,0]]);
+
+  for(const [dx,dy] of dirs){
+   const nx=x+dx*2;
+   const ny=y+dy*2;
+
+   if(nx>0&&ny>0&&nx<size-1&&ny<size-1&&maze[ny][nx]===1){
+    maze[y+dy][x+dx]=0;
+    carve(nx,ny);
+   }
+  }
+ }
+
+ carve(1,1);
+ maze[1][1]=0;
+ maze[19][19]=0;
+}
+
+function findPath(){
+ const queue=[[1,1]];
+ const visited=new Set(["1,1"]);
+ const parent={};
+
+ while(queue.length){
+  const [x,y]=queue.shift();
+
+  if(x===19&&y===19)break;
+
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx,ny=y+dy;
+   const id=nx+","+ny;
+
+   if(nx>=0&&ny>=0&&nx<21&&ny<21&&
+      maze[ny][nx]===0&&!visited.has(id)){
+    visited.add(id);
+    parent[id]=x+","+y;
+    queue.push([nx,ny]);
+   }
+  }
+ }
+
+ let path=[];
+ let current="19,19";
+
+ while(current){
+  const [x,y]=current.split(",").map(Number);
+  path.unshift({x,y});
+  if(current==="1,1")break;
+  current=parent[current];
+ }
+
+ return path;
+}
+
+function makeLevel(){
+ won=false;
+ collected=false;
+ player={x:1,y:1};
+
+ generateMaze();
+
+ const path=findPath();
+ const keyIndex=Math.max(2,Math.floor(path.length*.30));
+ const doorIndex=Math.max(keyIndex+2,Math.floor(path.length*.70));
+
+ key=path[keyIndex];
+ door=path[Math.min(doorIndex,path.length-2)];
+ goal={x:19,y:19};
+
+ document.getElementById("level").textContent=level;
+ document.getElementById("message").textContent=
+  "اجمع المفتاح وافتح الطريق إلى البوابة";
+
+ document.getElementById("overlay").style.display="none";
+ draw();
+}
+
+function move(dx,dy){
+ if(won)return;
+
+ const now=Date.now();
+ if(now-lastMove<65)return;
+ lastMove=now;
+
+ const nx=player.x+dx;
+ const ny=player.y+dy;
+
+ if(nx<0||ny<0||nx>=21||ny>=21)return;
+ if(maze[ny][nx]===1)return;
+
+ if(nx===door.x&&ny===door.y&&!collected){
+  document.getElementById("message").textContent="الباب مغلق! ابحث عن المفتاح";
+  return;
+ }
+
+ player.x=nx;
+ player.y=ny;
+
+ if(key&&player.x===key.x&&player.y===key.y&&!collected){
+  collected=true;
+  stars++;
+  document.getElementById("stars").textContent=stars;
+  document.getElementById("message").textContent="حصلت على المفتاح! الطريق مفتوح";
+ }
+
+ if(player.x===goal.x&&player.y===goal.y){
+  finishLevel();
+ }
+
+ draw();
+}
+
+function finishLevel(){
+ won=true;
+
+ if(level>=best){
+  best=Math.min(TOTAL,level+1);
+  localStorage.setItem("orbixBest",best);
+  document.getElementById("best").textContent=best;
+ }
+
+ document.getElementById("winTitle").textContent="LEVEL COMPLETED!";
+ document.getElementById("winText").textContent=
+  "أحسنت! أنهيت المرحلة "+level+" بنجاح.";
+
+ document.getElementById("overlay").style.display="flex";
+}
+
+function draw(){
+ ctx.clearRect(0,0,440,440);
+
+ for(let y=0;y<21;y++){
+  for(let x=0;x<21;x++){
+   if(maze[y][x]===1){
+    ctx.fillStyle="#292344";
+    ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
+    ctx.strokeStyle="#373052";
+    ctx.strokeRect(x*SIZE,y*SIZE,SIZE,SIZE);
+   }else{
+    ctx.fillStyle="#0d0b1c";
+    ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
+   }
+  }
+ }
+
+ // البوابة
+ ctx.fillStyle="#22e6a5";
+ ctx.shadowColor="#22e6a5";
+ ctx.shadowBlur=18;
+ ctx.fillRect(goal.x*SIZE+8,goal.y*SIZE+8,24,24);
+ ctx.shadowBlur=0;
+
+ // الباب
+ if(door){
+  ctx.fillStyle=collected?"#145a4b":"#f09b37";
+  ctx.fillRect(door.x*SIZE+5,door.y*SIZE+5,30,30);
+  ctx.fillStyle="#fff";
+  ctx.font="20px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(collected?"✓":"🔒",door.x*SIZE+20,door.y*SIZE+27);
+ }
+
+ // المفتاح
+ if(key&&!collected){
+  ctx.fillStyle="#ffe36b";
+  ctx.shadowColor="#ffe36b";
+  ctx.shadowBlur=15;
+  ctx.beginPath();
+  ctx.arc(key.x*SIZE+20,key.y*SIZE+20,9,0,Math.PI*2);
+  ctx.fill();
+  ctx.shadowBlur=0;
+ }
+
+ // اللاعب
+ ctx.fillStyle="#65f5ff";
+ ctx.shadowColor="#00dfff";
+ ctx.shadowBlur=20;
+ ctx.beginPath();
+ ctx.arc(player.x*SIZE+20,player.y*SIZE+20,13,0,Math.PI*2);
+ ctx.fill();
+ ctx.shadowBlur=0;
+
+ ctx.fillStyle="#fff";
+ ctx.beginPath();
+ ctx.arc(player.x*SIZE+15,player.y*SIZE+15,3,0,Math.PI*2);
+ ctx.fill();
+}
+
+function nextLevel(){
+ if(!won){
+  document.getElementById("message").textContent=
+   "أنهِ المرحلة أولاً للوصول إلى المرحلة التالية";
+  return;
+ }
+
+ if(level<TOTAL){
+  level++;
+  makeLevel();
+ }else{
+  document.getElementById("winTitle").textContent="YOU WON!";
+  document.getElementById("winText").textContent=
+   "أنهيت جميع مراحل ORBIX!";
+  document.getElementById("overlay").style.display="flex";
+  document.getElementById("continue").textContent="العب من جديد";
+ }
+}
+
+function restartLevel(){
+ makeLevel();
+}
+
+// أزرار التحكم
+document.querySelectorAll(".ctrl").forEach(button=>{
+ button.addEventListener("click",()=>{
+  move(Number(button.dataset.x),Number(button.dataset.y));
+ });
+});
+
+// لوحة المفاتيح
+document.addEventListener("keydown",e=>{
+ const keys={
+  ArrowUp:[0,-1],
+  ArrowDown:[0,1],
+  ArrowLeft:[-1,0],
+  ArrowRight:[1,0],
+  w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]
+ };
+
+ const direction=keys[e.key];
+ if(direction){
+  e.preventDefault();
+  move(direction[0],direction[1]);
+ }
+});
+
+// تحكم لمس محسّن
+canvas.addEventListener("touchstart",e=>{
+ const t=e.changedTouches[0];
+ touchStart={x:t.clientX,y:t.clientY};
+},{passive:true});
+
+canvas.addEventListener("touchmove",e=>{
+ if(!touchStart||won)return;
+
+ const t=e.changedTouches[0];
+ const dx=t.clientX-touchStart.x;
+ const dy=t.clientY-touchStart.y;
+
+ const threshold=18;
+
+ if(Math.max(Math.abs(dx),Math.abs(dy))<threshold)return;
+
+ if(Math.abs(dx)>Math.abs(dy)){
+  move(dx>0?1:-1,0);
+ }else{
+  move(0,dy>0?1:-1);
+ }
+
+ touchStart={x:t.clientX,y:t.clientY};
+},{passive:true});
+
+canvas.addEventListener("touchend",()=>{
+ touchStart=null;
+},{passive:true});
+
+canvas.addEventListener("touchcancel",()=>{
+ touchStart=null;
+},{passive:true});
+
+// الأزرار الإضافية
+document.getElementById("restart").addEventListener("click",restartLevel);
+document.getElementById("next").addEventListener("click",nextLevel);
+
+document.getElementById("continue").addEventListener("click",()=>{
+ if(level===TOTAL&&won){
+  level=1;
+  stars=0;
+  document.getElementById("stars").textContent=stars;
+ }
+ nextLevel();
+});
+
+makeLevel();
+</script>
+</body>
+</html>
+
