@@ -37,7 +37,7 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
 .level.current{border-color:#bd91ff;background:#38205c}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:7px}
 .topbar button{padding:9px;font-size:13px}
-#mazeCanvas{display:block;width:min(94vw,54svh,560px);height:auto;max-height:54svh;margin:5px auto;border:2px solid var(--wall,#68439c);border-radius:12px;background:var(--floor,#100b1d);box-shadow:0 0 25px var(--glow,#8d4cff30);touch-action:none}
+#mazeCanvas{display:block;width:min(100%,440px);height:auto;margin:12px auto;border:2px solid var(--wall,#68439c);border-radius:12px;background:var(--floor,#100b1d);box-shadow:0 0 25px var(--glow,#8d4cff30);touch-action:none}
 .game-info{display:flex;justify-content:space-around;gap:8px;color:#d9c5ff;font-size:13px;margin:12px 0}
 .message{text-align:center;color:#bca8d7;min-height:22px;font-size:14px}
 .controls{width:190px;margin:14px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;direction:ltr}
@@ -52,62 +52,6 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
 .timer-bar{height:8px;background:#302044;border-radius:20px;overflow:hidden;margin:9px 0}
 #timerFill{height:100%;width:100%;background:#ffd75e;transition:width .2s linear}
 @media(max-width:360px){.shop-grid{grid-template-columns:repeat(2,1fr)}}
-
-/* الصفحة الرئيسية: كل الأزرار ظاهرة */
-#home.screen.active{
- height:100svh;
- min-height:100svh;
- overflow:hidden;
- display:flex;
- flex-direction:column;
- justify-content:center;
- padding:5px 12px;
- gap:0
-}
-#home .logo{font-size:clamp(35px,10vw,44px);margin:0}
-#home .sub{margin:0 0 5px}
-#home .panel{margin:6px 0;padding:10px 12px}
-#home .avatar{width:48px;height:48px}
-#home input{padding:9px;margin-top:7px}
-#home .stats{margin-top:8px;gap:6px}
-#home .stat{padding:7px 3px}
-#home .stat b{font-size:20px}
-#home .menu{gap:7px;padding:9px}
-#home .menu button{min-height:49px;padding:8px 5px;font-size:14px}
-
-/* شاشة اللعب: المتاهة والتحكم على نفس الشاشة */
-#gameScreen.screen.active{
- height:100svh;
- min-height:100svh;
- overflow:hidden;
- padding:5px 5px 7px;
- display:flex;
- flex-direction:column;
- justify-content:flex-start
-}
-#gameScreen h3{margin:5px 0;font-size:17px}
-#gameScreen .game-info{margin:5px 0;font-size:12px}
-#gameScreen #mazeCanvas{
- width:min(96vw,56svh,560px);
- max-height:56svh;
- flex:0 1 auto
-}
-#gameScreen .message{min-height:18px;font-size:12px}
-#gameScreen .controls{width:174px;margin:5px auto;gap:5px}
-#gameScreen .controls button{padding:9px 0;font-size:20px}
-#gameScreen .note{margin-top:3px;font-size:10px}
-
-@media(max-height:700px){
- #home .panel{margin:4px 0;padding:8px 10px}
- #home .menu{gap:5px;padding:7px}
- #home .menu button{min-height:43px}
- #home .stats{margin-top:6px}
- #gameScreen #mazeCanvas{
-  width:min(94vw,49svh,520px);
-  max-height:49svh
- }
- #gameScreen .controls{margin:3px auto}
-}
 </style>
 </head>
 <body>
@@ -132,7 +76,7 @@ input{width:100%;padding:12px;border-radius:11px;background:#0d0918;color:white;
   <button class="primary" onclick="startGame()">▶ ابدأ اللعب</button>
   <button onclick="showLevels()">المراحل</button>
   <button onclick="openShop('balls')">🛍 متجر الكرات</button>
-  <button onclick="openShop('maps')">🗺 متجر الخرائط</button>
+  <button onclick="openShop('maps')">🎨 متجر الخرائط</button>
   <button onclick="startRush()">⚡ طور جمع العملات</button>
   <button onclick="showScreen('profile')">ملف اللاعب</button>
  </div>
@@ -228,6 +172,7 @@ const balls=[
  {id:"pumpkin",name:"القرع",icon:"🎃",color:"#ff9b38",price:65},
  {id:"heart",name:"القلب",icon:"❤️",color:"#ff5577",price:70},
  {id:"diamond",name:"الماسة",icon:"💎",color:"#62eaff",price:75},
+ {id:"star",name:"النجمة",icon:"🌟",color:"#ffe47a",price:75},
  {id:"watermelon",name:"البطيخة",icon:"🍉",color:"#ff6688",price:80},
  {id:"football",name:"كرة القدم",icon:"⚽",color:"#fff",price:80},
  {id:"basketball",name:"السلة",icon:"🏀",color:"#ff914d",price:80},
@@ -294,7 +239,7 @@ function showLevels(){
 function openShop(type){
  let isBall=type==="balls",items=isBall?balls:maps;
  document.getElementById("shopTitle").textContent=isBall?"متجر الكرات":"متجر الخرائط";
- document.getElementById("shopSubtitle").textContent=isBall?"اختر شكل كرتك":"اشترِ خرائط جديدة لمتاهتك";
+ document.getElementById("shopSubtitle").textContent=isBall?"اختر شكل كرتك":"غيّر ألوان عالمك";
  document.getElementById("shopCoins").textContent=data.coins;
  let g=document.getElementById("shopGrid");g.innerHTML="";
  items.forEach(s=>{
@@ -319,7 +264,7 @@ function openShop(type){
  });
  showScreen("shop");
 }
-function rng(seed){let s=seed>>>0;return()=>{let t=(s+=0x6D2B79F5);t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function rng(seed){let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),1|s);t^=t+Math.imul(t^(t>>>7),61|t);return((t^(t>>>14))>>>0)/4294967296}}
 function generateMaze(seed){
  let r=rng(seed),m=Array.from({length:N},()=>Array(N).fill(1));
  function carve(x,y){
@@ -419,7 +364,7 @@ function finishLevel(){
  data.completed=Math.max(data.completed,level);save();
  document.getElementById("winTitle").textContent="تم اجتياز المرحلة!";
  document.getElementById("winText").textContent="أنهيت المرحلة "+level+" بنجاح!";
- document.getElementById("rewardText").textContent="10 عملات للمرحلة";
+ document.getElementById("rewardText").textContent=data.claimed.includes(level)?"10 عملات للمرحلة":"";
  document.getElementById("nextButton").style.display=level>=50?"none":"";
  showScreen("winScreen");
 }
