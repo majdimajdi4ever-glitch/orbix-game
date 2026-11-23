@@ -205,6 +205,44 @@ let level=1,mode="normal",maze=[],player={x:1,y:1},key={x:3,y:3},door={x:5,y:5},
 let hasKey=false,won=false,coinsOnMap=[],timeLeft=60,timerId=null;
 let held=null,holdTimer=null,activeKey=null,keyTimer=null,swipe=null;
 
+/* مؤثرات صوتية إلكترونية قصيرة فقط، بدون موسيقى */
+let audioContext=null;
+function playSfx(name){
+ try{
+  const AudioAPI=window.AudioContext||window.webkitAudioContext;
+  if(!AudioAPI)return;
+  if(!audioContext)audioContext=new AudioAPI();
+  if(audioContext.state==="suspended")audioContext.resume();
+  const t=audioContext.currentTime;
+  const settings={
+   click:[920,650,.035,"square",.012],
+   coin:[1150,1550,.085,"sine",.025],
+   key:[620,980,.12,"triangle",.028],
+   door:[210,95,.16,"sawtooth",.022],
+   win:[480,1050,.20,"triangle",.03],
+   lose:[420,110,.26,"sawtooth",.022]
+  }[name];
+  if(!settings)return;
+  const [from,to,duration,wave,volume]=settings;
+  const osc=audioContext.createOscillator();
+  const gain=audioContext.createGain();
+  osc.type=wave;
+  osc.frequency.setValueAtTime(from,t);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(1,to),t+duration);
+  gain.gain.setValueAtTime(.0001,t);
+  gain.gain.exponentialRampToValueAtTime(volume,t+.008);
+  gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start(t);
+  osc.stop(t+duration+.02);
+ }catch(e){}
+}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button");
+ if(b&&!b.disabled)playSfx("click");
+},true);
+
 function save(){try{localStorage.setItem("orbixSave",JSON.stringify(data))}catch(e){}}
 function showScreen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")updateHome()}
 function ball(){return balls.find(s=>s.id===data.selectedBall)||balls[0]}
@@ -335,15 +373,16 @@ function move(dx,dy){
  if(mode==="normal"&&nx===door.x&&ny===door.y&&!hasKey){
   document.getElementById("message").textContent="الباب مغلق! ابحث عن المفتاح.";return false;
  }
+ if(mode==="normal"&&nx===door.x&&ny===door.y&&hasKey)playSfx("door");
  player={x:nx,y:ny};
  if(mode==="normal"&&nx===key.x&&ny===key.y&&!hasKey){
-  hasKey=true;document.getElementById("keyStatus").textContent="المفتاح: حصلت عليه ✓";
+  hasKey=true;playSfx("key");document.getElementById("keyStatus").textContent="المفتاح: حصلت عليه ✓";
   document.getElementById("message").textContent="المفتاح معك! توجه إلى الهدف.";
  }
  if(mode==="rush"){
   let index=coinsOnMap.findIndex(c=>c.x===nx&&c.y===ny);
   if(index!==-1){
-   coinsOnMap.splice(index,1);data.coins++;save();
+   coinsOnMap.splice(index,1);playSfx("coin");data.coins++;save();
    document.getElementById("gameCoins").textContent=data.coins;
    document.getElementById("coinsHome").textContent=data.coins;
    document.getElementById("message").textContent="جمعت عملة! 🪙";
@@ -359,7 +398,7 @@ function move(dx,dy){
  return true;
 }
 function finishLevel(){
- won=true;stopGame();
+ playSfx("win");won=true;stopGame();
  if(!data.claimed.includes(level)){data.coins+=10;data.claimed.push(level)}
  data.completed=Math.max(data.completed,level);save();
  document.getElementById("winTitle").textContent="تم اجتياز المرحلة!";
@@ -370,7 +409,7 @@ function finishLevel(){
 }
 function finishRush(reason){
  if(mode!=="rush"||won)return;
- won=true;stopGame();
+ playSfx(reason==="all"?"win":"lose");won=true;stopGame();
  let collected=30-coinsOnMap.length;
  document.getElementById("winTitle").textContent=reason==="all"?"أحسنت! جمعت كل العملات!":"انتهى الوقت!";
  document.getElementById("winText").textContent=reason==="all"?"أنهيت طور جمع العملات قبل انتهاء الوقت!":"جمعت "+collected+" من أصل 30 عملة.";
